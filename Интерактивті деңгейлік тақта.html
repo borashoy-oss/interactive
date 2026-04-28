@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивті Геометрия Тақтасы</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            background: #1a1a2e; /* Күңгірт стильді фон */
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            color: white;
+        }
+
+        h2 { 
+            text-align: center; 
+            padding: 20px; 
+            font-size: 2.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #00d2ff;
+        }
+
+        /* Кестені бүкіл экранға созу */
+        .grid-container {
+            flex-grow: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: auto repeat(3, 1fr);
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .quest-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+            font-weight: bold;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quest-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.4);
+            border-color: #00d2ff;
+        }
+
+        /* Деңгейлерге арналған градиенттер */
+        .level-a { background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); }
+        .level-b { background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%); }
+        .level-c { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
+
+        .quest-card::after {
+            content: 'ТАҢДАУ';
+            position: absolute;
+            bottom: 10px;
+            font-size: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Модальді терезе стилі */
+        .modal { 
+            display: none; 
+            position: fixed; 
+            z-index: 10; 
+            left: 0; top: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(0, 0, 0, 0.9); 
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-content { 
+            background: #252a41; 
+            margin: 5% auto; 
+            padding: 40px; 
+            border-radius: 25px; 
+            width: 60%; 
+            max-width: 800px;
+            text-align: center; 
+            border: 2px solid #00d2ff;
+            box-shadow: 0 0 50px rgba(0, 210, 255, 0.2);
+        }
+
+        #questionText { font-size: 2rem; margin-bottom: 30px; line-height: 1.4; }
+
+        .option { 
+            background: rgba(255, 255, 255, 0.05); 
+            margin: 15px 0; 
+            padding: 20px; 
+            border-radius: 15px; 
+            cursor: pointer; 
+            font-size: 1.5rem;
+            transition: 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .option:hover { background: #3498db; color: white; transform: translateX(10px); }
+
+        #feedback { font-size: 1.8rem; margin-top: 20px; min-height: 40px; }
+
+        .close-btn { 
+            background: #e74c3c; 
+            color: white; 
+            border: none; 
+            padding: 10px 25px; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            margin-top: 20px;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Шеңбер теңдеуі: Интерактивті Ойын</h2>
+
+    <div class="grid-container">
+        <div class="header" style="color: #2ecc71;">А ДЕҢГЕЙІ (ОҢАЙ)</div>
+        <div class="header" style="color: #f1c40f;">В ДЕҢГЕЙІ (ОРТАША)</div>
+        <div class="header" style="color: #e74c3c;">С ДЕҢГЕЙІ (ҚИЫН)</div>
+
+        <div class="quest-card level-a" onclick="openModal(0)">?</div>
+        <div class="quest-card level-b" onclick="openModal(3)">?</div>
+        <div class="quest-card level-c" onclick="openModal(6)">?</div>
+
+        <div class="quest-card level-a" onclick="openModal(1)">?</div>
+        <div class="quest-card level-b" onclick="openModal(4)">?</div>
+        <div class="quest-card level-c" onclick="openModal(7)">?</div>
+
+        <div class="quest-card level-a" onclick="openModal(2)">?</div>
+        <div class="quest-card level-b" onclick="openModal(5)">?</div>
+        <div class="quest-card level-c" onclick="openModal(8)">?</div>
+    </div>
+
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <h3 id="questionText">Сұрақ мәтіні</h3>
+            <div id="optionsContainer"></div>
+            <div id="feedback"></div>
+            <button class="close-btn" onclick="closeModal()">Жабу</button>
+        </div>
+    </div>
+
+<script>
+    const questions = [
+        { q: "Центрі (0;0), R = 5 шеңбер теңдеуі қайсы?", a: ["x² + y² = 25", "x² + y² = 5", "x² + y² = 10"], correct: 0 },
+        { q: "(x-1)² + (y-2)² = 9 шеңберінің центрі:", a: ["(-1; -2)", "(2; 1)", "(1; 2)"], correct: 2 },
+        { q: "x² + y² = 36 шеңберінің радиусы неше?", a: ["36", "6", "18"], correct: 1 },
+        { q: "Центрі (3;4) және (0;0) арқылы өтетін шеңбердің R² мәні?", a: ["7", "25", "5"], correct: 1 },
+        { q: "(x-2)² + (y-3)² = 1 теңдеуіндегі бос мүше?", a: ["12", "13", "14"], correct: 0 },
+        { q: "M(6;8) нүктесі x² + y² = 100 шеңберінің қай жерінде?", a: ["Бойында", "Сыртында", "Ішінде"], correct: 0 },
+        { q: "Диаметрі A(0;0) және B(0;6) болса, ортасы (центрі) қай нүкте?", a: ["(0;0)", "(3;3)", "(0;3)"], correct: 2 },
+        { q: "x² + y² - 2x = 0 шеңбер центрінің x координатасы?", a: ["1", "-1", "0"], correct: 0 },
+        { q: "R=4, Ox-ті (2;0) нүктесінде жанайтын шеңбер центрі?", a: ["(2; 4)", "(4; 2)", "(0; 4)"], correct: 0 }
+    ];
+
+    function openModal(index) {
+        const modal = document.getElementById("myModal");
+        const q = questions[index];
+        document.getElementById("questionText").innerText = q.q;
+        const container = document.getElementById("optionsContainer");
+        const feedback = document.getElementById("feedback");
+        
+        container.innerHTML = "";
+        feedback.innerText = "";
+        
+        q.a.forEach((opt, i) => {
+            const btn = document.createElement("div");
+            btn.className = "option";
+            btn.innerText = opt;
+            btn.onclick = () => {
+                if(i === q.correct) {
+                    feedback.innerText = "КЕРЕМЕТ! ДҰРЫС ✅";
+                    feedback.style.color = "#2ecc71";
+                } else {
+                    feedback.innerText = "ҚАТЕ! ҚАЙТА ОЙЛАН ❌";
+                    feedback.style.color = "#e74c3c";
+                }
+            };
+            container.appendChild(btn);
+        });
+        modal.style.display = "block";
+    }
+
+    function closeModal() { document.getElementById("myModal").style.display = "none"; }
+</script>
+
+</body>
+</html>
